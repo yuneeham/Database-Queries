@@ -1,0 +1,121 @@
+
+
+#Query 1. Find top selling products in 2017
+SELECT distinct o.productID, sum(d.quantity) as unit_sold
+FROM CPSC.orders o JOIN CPSC.orderdetails d ON o.orderID = d.orderID
+WHERE YEAR(o.order_date) = 2017
+GROUP BY productid
+ORDER BY sum(d.quantity) DESC;
+
+
+
+
+#Query 2. Find average, min, max shipping window from order date to shipping date by year
+SELECT 
+YEAR(order_date) as order_year,
+AVG(DATEDIFF(ship_date, order_date)) as avg_ship_window,
+MIN(DATEDIFF(ship_date, order_date)) as min_ship_window,
+MAX(DATEDIFF(ship_date, order_date)) as max_ship_window
+FROM CPSC.orders
+GROUP BY YEAR(order_date)
+
+
+ 
+#Query 3. Find number of orders in  each month 
+
+SELECT count(orderID), MONTH(order_date) as order_month, YEAR(order_date) as order_year
+FROM orders
+GROUP BY order_year, order_month
+ORDER BY order_year DESC, order_month ASC;
+ 
+
+
+#Query 4. Return top most frequent visit customer and number of their visits for each month
+SELECT 
+customerID, 
+SUM(CASE WHEN MONTH(order_date) = 1 THEN 1 ELSE 0 END) as Jan,
+SUM(CASE WHEN MONTH(order_date) = 2 THEN 1 ELSE 0 END) as Feb, 
+SUM(CASE WHEN MONTH(order_date) = 3 THEN 1 ELSE 0 END) as Mar, 
+SUM(CASE WHEN MONTH(order_date) = 4 THEN 1 ELSE 0 END) as Apr,
+SUM(CASE WHEN MONTH(order_date) = 5 THEN 1 ELSE 0 END) as May,
+SUM(CASE WHEN MONTH(order_date) = 6 THEN 1 ELSE 0 END) as Jun, 
+SUM(CASE WHEN MONTH(order_date) = 7 THEN 1 ELSE 0 END) as Jul,
+SUM(CASE WHEN MONTH(order_date) = 8 THEN 1 ELSE 0 END) as Aug, 
+SUM(CASE WHEN MONTH(order_date) = 9 THEN 1 ELSE 0 END) as Sep,
+SUM(CASE WHEN MONTH(order_date) = 10 THEN 1 ELSE 0 END) as Oct,
+SUM(CASE WHEN MONTH(order_date) = 11 THEN 1 ELSE 0 END) as Nov,
+SUM(CASE WHEN MONTH(order_date) = 12 THEN 1 ELSE 0 END) as December,
+COUNT(order_date) as SUM
+FROM CPSC.orders
+GROUP BY customerID
+ORDER BY COUNT(order_date) DESC
+
+
+
+
+#Query 5 - On average, which gender of salespeople has a higher salary, served more customers, and the cost of per served customer for each gender of salespeople?
+
+select s.gender, round(avg(Salary),2) as avg_salary ,count(customerID) as Num_customers_served, 
+round(avg(salary)/count(customerId),2) as average_cost_per_customer
+ FROM CPSC.customer c join CPSC.salesPeople s 
+ on c.employeeID = s.employeeid 
+ group by s.gender 
+ order by avg_salary desc
+ 
+
+
+#Query 6.This query will find out which salesman had the best and worst performance – base on the total sales that he or she generated and the total # of customers and unique #customers they served.
+
+select c.employeeid, round(sum(transaction_amount),1) as total_sales , count(o.customerID) as customer_served, count(distinct o.customerID) as unique_customer_served
+FROM orders o join orderdetails od
+
+
+
+
+#Query 7. Which supplier is the most popular? 
+
+select s.supplierid, s.SupplierName,count(distinct orderid) as total_sales
+from orders o join product p 
+on o.productID = p.productID join productDetail pd
+on pd.productid = p.productID join suppliers s
+on pd.SupplierID = s.SupplierID
+group by s.SupplierID
+Order by total_sales desc
+
+
+
+
+#Query 8. what’s the average, max and min transactions for each different payment types?
+
+ select p.paymenttype, avg(transaction_amount) as avg_amount,max(transaction_amount) as max_amount,min(transaction_amount) as min_amount
+from orders o join paymentDetail p
+on o.orderID = p.orderid join orderdetails od
+on o.orderid = od.orderid
+group by p.paymenttype
+order by avg_amount desc
+
+
+
+
+
+#Query 9 – Stored Procedure – Find order details by using stored procedure 
+
+DELIMITER //
+ 
+CREATE PROCEDURE find_od (IN orderID int)
+ 
+BEGIN 
+ 
+select  orderID , 
+            transaction_amount, 
+            discount, 
+            quantity
+ 
+from CPSC.orderdetails; 
+
+END //
+DELIMITER ;
+ 
+  
+
+
